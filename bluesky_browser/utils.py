@@ -1,4 +1,5 @@
 import inspect
+import logging
 
 from PyQt5.QtGui import QCursor, QDrag, QPixmap, QRegion
 from PyQt5.QtWidgets import QWidget, QTabWidget
@@ -7,6 +8,9 @@ from traitlets import HasTraits, TraitType
 from traitlets.config.loader import (PyFileConfigLoader, ConfigFileNotFound,
                                      Config)
 from traitlets.config import Configurable
+
+
+log = logging.getLogger('bluesky_browser')
 
 
 class MoveableTabWidget(QTabWidget):
@@ -88,6 +92,7 @@ def load_config():
     try:
         config = loader.load_config()
     except ConfigFileNotFound:
+        log.info("No configuration file found.")
         config = Config()
     return config
 
