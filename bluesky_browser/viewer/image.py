@@ -89,7 +89,7 @@ class BaseImageManager(Configurable):
                 image_keys[key] = data_key['shape']
             elif ndim == 3:
                 # ophyd <1.4.0 gives (x, y, z) where z is 0
-                # Maybe the better way to detect this is start['version']['ophyd'].
+                # Maybe the better way to detect this is start['versions']['ophyd'].
                 if data_key['shape'][-1] == 0:
                     object_keys = descriptor_doc.get('object_keys', {})
                     for object_name, data_keys in object_keys.items():
