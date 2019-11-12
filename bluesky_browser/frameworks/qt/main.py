@@ -110,7 +110,7 @@ def main():
                                      epilog=f'version {__version__}')
     parser.register('action', 'demo', _DemoAction)
     parser.register('action', 'generate_config', _GenerateConfigAction)
-    parser.add_argument('catalog', type=str)
+    parser.add_argument('catalog', nargs='?', type=str, default=None)
     parser.add_argument('-z', '--zmq-address', dest='zmq_address',
                         default=None, type=str,
                         help='0MQ remote dispatcher address (host:port)')
@@ -132,7 +132,10 @@ def main():
 
 
 def build_app(catalog_uri, zmq_address=None):
-    catalog = Catalog(catalog_uri)
+    if catalog_uri is None:
+        from databroker import catalog
+    else:
+        catalog = Catalog(catalog_uri)
 
     app = QApplication([b'Bluesky Browser'])
     app.main_window = QMainWindow()
