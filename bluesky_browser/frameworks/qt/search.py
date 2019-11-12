@@ -2,6 +2,7 @@
 Experimental Qt-based data browser for bluesky
 """
 import ast
+import concurrent.futures
 from datetime import datetime
 import event_model
 import functools
@@ -86,7 +87,6 @@ class SearchState(ConfigurableQObject):
         self._results_catalog = None
         self._new_entries = queue.Queue(maxsize=MAX_SEARCH_RESULTS)
         self.list_subcatalogs()
-        self.set_selected_catalog(0)
         self.query_queue = queue.Queue()
         self.show_results_event = threading.Event()
         self.reload_event = threading.Event()
@@ -163,15 +163,30 @@ class SearchState(ConfigurableQObject):
     def list_subcatalogs(self):
         self._subcatalogs.clear()
         self.catalog_selection_model.clear()
-        for name in self.catalog:
+        executor = concurrent.futures.ThreadPoolExecutor(max_workers=10)
+        event = threading.Event()
+
+        def test_and_add(name, event):
             # Check that the catalog can be opened.
             try:
                 self.catalog[name]()
             except Exception:
                 log.exception(f"Error opening subcatalog {name}")
-                continue
-            self._subcatalogs.append(name)
-            self.catalog_selection_model.appendRow(QStandardItem(str(name)))
+            else:
+                self._subcatalogs.append(name)
+                self.catalog_selection_model.appendRow(QStandardItem(str(name)))
+                event.set()
+
+        for name in self.catalog:
+            executor.submit(test_and_add, name, event)
+
+        # When at least one catalog has been confirmed to be open-able,
+        # `event` will be set and we will set that as the default catalog.
+        while True:
+            if event.wait(timeout=5):
+                self.set_selected_catalog(0)
+                break
+            log.warning("Slow in discovering a single working catalog....")
 
     def set_selected_catalog(self, item):
         name = self._subcatalogs[item]
