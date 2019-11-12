@@ -164,6 +164,12 @@ class SearchState(ConfigurableQObject):
         self._subcatalogs.clear()
         self.catalog_selection_model.clear()
         for name in self.catalog:
+            # Check that the catalog can be opened.
+            try:
+                self.catalog[name]()
+            except Exception:
+                log.exception(f"Error opening subcatalog {name}")
+                continue
             self._subcatalogs.append(name)
             self.catalog_selection_model.appendRow(QStandardItem(str(name)))
 
