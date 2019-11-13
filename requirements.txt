@@ -5,7 +5,7 @@ intake
 jsonschema
 matplotlib
 ophyd  # for demo's example data generator -- maybe should be optional?
-pyqt5>=5.8
+pyqt5 >=5.8
 pyzmq
 qtpy
 suitcase-jsonl
