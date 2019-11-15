@@ -77,6 +77,7 @@ class SearchState(ConfigurableQObject):
     search_result_row = Callable(default_search_result_row, config=True)
 
     def __init__(self, catalog):
+        self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=10)
         self.update_config(load_config())
         self.catalog = catalog
         self.enabled = False  # to block searches during initial configuration
@@ -163,7 +164,6 @@ class SearchState(ConfigurableQObject):
     def list_subcatalogs(self):
         self._subcatalogs.clear()
         self.catalog_selection_model.clear()
-        executor = concurrent.futures.ThreadPoolExecutor(max_workers=10)
         event = threading.Event()
 
         def test_and_add(name, event):
@@ -178,7 +178,7 @@ class SearchState(ConfigurableQObject):
                 event.set()
 
         for name in self.catalog:
-            executor.submit(test_and_add, name, event)
+            self.executor.submit(test_and_add, name, event)
 
         # When at least one catalog has been confirmed to be open-able,
         # `event` will be set and we will set that as the default catalog.
